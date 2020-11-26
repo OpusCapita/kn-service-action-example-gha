@@ -49,7 +49,7 @@ jobs:
        - name: Build and Push to GitHub Container Registry
          id: buildpack_build_push
          run: |
-           ./pack build "${{ CONTAINER_REPO }}/${{CONTAINER_IMAGE_REPO}}:${{ env.GITHUB_REF }}" \
+           ./pack build "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{ env.GITHUB_REF }}" \
              --builder ${{ env.BUILDPACK_BUILDER }} \
              --descriptor project.toml"
              --publish
