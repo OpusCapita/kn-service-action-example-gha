@@ -61,12 +61,12 @@ jobs:
        
        - name: Knative Service Deploy
          id: kn_service_deploy
-         uses: kameshsampath/kn-service-action@master
+         uses: kameshsampath/kn-service-action@v0.1.0
          with: 
            k8s_api_server_url: "${{ secrets.OPENSHIFT_SERVER_URL }}"
            openshift_token: "${{ secrets.OPENSHIFT_TOKEN }}"
            service_name: fruits-app
            service_namespace: demos
            container_image: "ghcr.io/kameshsampath/fruits-app@${{ steps.docker_build_push.outputs.digest }}"
-       - name: Show Kn Service Output
-         run: echo ${{ steps.kn_service_deploy.outputs.service_info }}
+       - name: Show Kn Service URL
+         run: echo ${{ steps.kn_service_deploy.outputs.service_url }}
