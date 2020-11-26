@@ -1,0 +1,9 @@
+[project]
+id = "dev.kameshs.kn-service-action-example"
+name = "Kn Service Action Example"
+version = "1.0.0"
+
+[build]
+exclude = [
+  "README.md", ".git","target"
+]

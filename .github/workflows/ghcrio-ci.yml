@@ -1,5 +1,4 @@
-name: App Build and Push
-
+name: App Build and Push(GHCR)
 on:
   push:
     branches: [ master ]
