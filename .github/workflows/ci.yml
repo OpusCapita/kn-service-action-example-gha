@@ -56,8 +56,8 @@ jobs:
            file: ./src/main/docker/Dockerfile.jvm
            registry: ghcr.io
            tags: |
-            ghcr.io/kameshsampath/fruits-app:latest
-            ghcr.io/kameshsampath/fruits-app:master
+            ghcr.io/workspace7/fruits-app:latest
+            ghcr.io/workspace7/fruits-app:master
        
        - name: Knative Service Deploy
          id: kn_service_deploy
@@ -67,6 +67,6 @@ jobs:
            openshift_token: "${{ secrets.OPENSHIFT_TOKEN }}"
            service_name: fruits-app
            service_namespace: demos
-           container_image: "ghcr.io/kameshsampath/fruits-app@${{ steps.docker_build_push.outputs.digest }}"
+           container_image: "ghcr.io/workspace7/fruits-app@${{ steps.docker_build_push.outputs.digest }}"
        - name: Show Kn Service Output
          run: echo ${{ steps.kn_service_deploy.outputs.service_info }}
