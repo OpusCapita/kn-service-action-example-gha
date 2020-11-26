@@ -1,0 +1,70 @@
+name: App Build and Push
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  checkoutAndBuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Checkout
+        id: git_checkout
+        uses: actions/checkout@v2
+      - name: Maven Build
+        id: build_app
+        run: mvn -B -DskipTests clean package --file pom.xml
+      - name: Cache Maven packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - uses: actions/upload-artifact@v2
+        name: Save build target directory
+        with:
+          name: buildArtifacts
+          path: |
+            src/main/docker/*
+            target
+  containerBuild:
+    runs-on: ubuntu-latest
+    needs: [checkoutAndBuild]
+    steps:
+       - name: Download build target directory
+         uses: actions/download-artifact@v2
+         with:
+          name: buildArtifacts
+       - name: Set up Docker Buildx
+         uses: docker/setup-buildx-action@v1.0.3
+       - name: Login to GitHub Container Registry
+         uses: docker/login-action@v1
+         with:
+           registry: ghcr.io
+           username: ${{ github.repository_owner }}
+           password: ${{ secrets.GHCR_PAT }}
+       - name: Build and Push to GitHub Container Registry
+         id: docker_build_push
+         uses: docker/build-push-action@v2
+         with:
+           push: true
+           context: .
+           file: ./src/main/docker/Dockerfile.jvm
+           registry: ghcr.io
+           tags: |
+            ghcr.io/kameshsampath/fruits-app:latest
+            ghcr.io/kameshsampath/fruits-app:master
+       
+       - name: Knative Service Deploy
+         id: kn_service_deploy
+         uses: kameshsampath/kn-service-action
+         with: 
+           k8s_api_server_url: "${{ secrets.OPENSHIFT_SERVER_URL }}"
+           openshift_token: "${{ secrets.OPENSHIFT_TOKEN }}"
+           service_name: fruits-app
+           service_namespace: demos
+           container_image: "ghcr.io/kameshsampath/fruits-app@${{ steps.docker_build_push.outputs.digest }}"
