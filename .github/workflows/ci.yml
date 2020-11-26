@@ -68,3 +68,5 @@ jobs:
            service_name: fruits-app
            service_namespace: demos
            container_image: "ghcr.io/kameshsampath/fruits-app@${{ steps.docker_build_push.outputs.digest }}"
+       - name: Show Kn Service Output
+         run: echo ${{ steps.kn_service_deploy.outputs.service_info }}
