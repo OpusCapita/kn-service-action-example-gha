@@ -44,14 +44,21 @@ jobs:
          run: |
           curl -s -L -o pack.tgz ${{ steps.pack-download-url.outputs.result }}
           tar -xvf pack.tgz
+       # 
+       - name: Extract Branch 
+         id: github_branch
+         run: |
+           echo "##[set-output name=branch;]$(echo ${GITHUB_REF##*/})"
        #
        - name: Build and Push to GitHub Container Registry
          id: buildpack_build_push
          run: |
-           ./pack build "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{ env.GITHUB_REF }}" \
+           ./pack build "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{ steps.github_branch.outputs.branch }}" \
              --builder ${{ env.BUILDPACK_BUILDER }} \
-             --descriptor project.toml"
-             --publish
+             --descriptor project.toml
+             --publish 
+           docker tag "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{ steps.github_branch.outputs.branch }}" "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}"
+           docker push "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}"
        # 
        - name: Knative Service Deploy
          id: kn_service_deploy
