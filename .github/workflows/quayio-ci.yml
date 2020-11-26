@@ -55,14 +55,10 @@ jobs:
          run: |
            ./pack build "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{ steps.github_branch.outputs.branch }}" \
              --builder ${{ env.BUILDPACK_BUILDER }} \
-             --descriptor project.toml \
-             --publish 
+             --descriptor project.toml 
            docker tag "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{ steps.github_branch.outputs.branch }}" "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}"
+           docker push "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{ steps.github_branch.outputs.branch }}"
            docker push "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}"
-       #
-       - name: Extract Image Digest
-         id: image_digest
-         run: |
            echo "##[set-output name=digest;]$(docker images ${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{ steps.github_branch.outputs.branch }}" "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}} --no-trunc --quiet)"
        # 
        - name: Knative Service Deploy
@@ -73,6 +69,6 @@ jobs:
            openshift_token: "${{ secrets.OPENSHIFT_TOKEN }}"
            service_name: fruits-app
            service_namespace: demos
-           container_image: "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{ steps.image_digest.outputs.digest }}"
+           container_image: "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{ steps.buildpack_build_push.outputs.digest }}"
        - name: Show Kn Service URL
          run: echo ${{ steps.kn_service_deploy.outputs.service_url }}
