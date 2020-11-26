@@ -62,6 +62,6 @@ jobs:
            openshift_token: "${{ secrets.OPENSHIFT_TOKEN }}"
            service_name: fruits-app
            service_namespace: demos
-           container_image: "${{ CONTAINER_REPO }}/${{CONTAINER_IMAGE_REPO}}:${{ env.GITHUB_REF }}"
+           container_image: "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{ env.GITHUB_REF }}"
        - name: Show Kn Service URL
          run: echo ${{ steps.kn_service_deploy.outputs.service_url }}
