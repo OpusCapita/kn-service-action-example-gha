@@ -4,6 +4,7 @@ env:
   CONTAINER_IMAGE_REPO: "kameshsampath/fruits-app"
   PACK_VERSION: "v0.15.1"
   BUILDPACK_BUILDER: "quay.io/kameshsampath/java-11-jvm-builder"
+
 on:
   push:
     branches: [ master ]
@@ -50,7 +51,7 @@ jobs:
          run: |
            echo "##[set-output name=branch;]$(echo ${GITHUB_REF##*/})"
        #
-       - name: Build and Push to GitHub Container Registry
+       - name: Build and Push to Container Registry
          id: buildpack_build_push
          run: |
            ./pack build "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{ steps.github_branch.outputs.branch }}" \
@@ -63,12 +64,14 @@ jobs:
        # 
        - name: Knative Service Deploy
          id: kn_service_deploy
-         uses: kameshsampath/kn-service-action@v0.1.0
+         uses: kameshsampath/kn-service-action@v0.2.0
          with: 
            k8s_api_server_url: "${{ secrets.OPENSHIFT_SERVER_URL }}"
            openshift_token: "${{ secrets.OPENSHIFT_TOKEN }}"
            service_name: fruits-app
            service_namespace: demos
            container_image: "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{ steps.buildpack_build_push.outputs.digest }}"
+           registry_user: ${{ secrets.QUAY_USER }}
+           registry_password: ${{ secrets.QUAY_PASSWORD }}
        - name: Show Kn Service URL
          run: echo ${{ steps.kn_service_deploy.outputs.service_url }}
