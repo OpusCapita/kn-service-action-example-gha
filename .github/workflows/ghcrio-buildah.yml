@@ -34,6 +34,7 @@ jobs:
         with:
           name: buildArtifacts
           path: |
+            src/main/docker/*
             target
   containerBuild:
     runs-on: ubuntu-latest
@@ -55,18 +56,15 @@ jobs:
           image: "${{ env.CONTAINER_REPO }}/CONTAINER_IMAGE_REPO"
           tag: "${{steps.commit_metadata.outputs.branch}}-${{steps.commit_metadata.outputs.sha}}"
           base-image: ${{ env.BASE_IMAGE }}
-          content: |
-            target/lib/* /deployments/lib/
-            target/*-runner.jar /deployments/app.jar
-          envs: |
-            JAVA_OPTIONS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+          dockerfiles: |
+            src/main/docker/Dockerfile.jvm
 
        - name: Tag Latest
          run: |
            docker tag "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{steps.commit_metadata.outputs.branch}}-${{steps.commit_metadata.outputs.sha}}" "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}"
 
        - name: Push To GCR
-         id: push-to-ghcr
+         id: push-tag-to-ghcr
          uses: redhat-actions/push-to-registry@v1
          with:
           image: "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}"
@@ -97,7 +95,7 @@ jobs:
            service_namespace: demos
            registry_user: ${{ github.repository_owner }}
            registry_password: ${{ secrets.GHCR_PAT }}
-           container_image: "${{ steps.push-to-ghcr.outputs.registry-path }}"
+           container_image: "${{ steps.push-tag-to-ghcr.outputs.registry-path }}"
        
        - name: Show Kn Service URL
          run: echo ${{ steps.kn_service_deploy.outputs.service_url }}
