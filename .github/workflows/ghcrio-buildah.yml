@@ -52,7 +52,7 @@ jobs:
        - name: Build Image
          uses: redhat-actions/buildah-build@v1
          with:
-          image: "${{ env.CONTAINER_REPO }}/CONTAINER_IMAGE_REPO"
+          image: "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO }}"
           tag: "${{steps.commit_metadata.outputs.branch}}-${{steps.commit_metadata.outputs.sha}}"
           base-image: ${{ env.BASE_IMAGE }}
           dockerfiles: |
