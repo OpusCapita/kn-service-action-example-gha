@@ -87,7 +87,7 @@ jobs:
 
        - name: Knative Service Deploy
          id: kn_service_deploy
-         uses: kameshsampath/kn-service-action@v0.2.0
+         uses: kameshsampath/kn-service-action@v0.2.1
          with: 
            k8s_api_server_url: "${{ secrets.OPENSHIFT_SERVER_URL }}"
            openshift_token: "${{ secrets.OPENSHIFT_TOKEN }}"
