@@ -34,8 +34,7 @@ jobs:
         with:
           name: buildArtifacts
           path: |
-            src/main/docker/*
-            target
+            ./**/*
   containerBuild:
     runs-on: ubuntu-latest
     needs: [checkoutAndBuild]
