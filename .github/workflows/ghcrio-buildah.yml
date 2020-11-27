@@ -78,7 +78,7 @@ jobs:
        # until https://github.com/redhat-actions/push-to-registry/issues/6
        # is fixed
        - name: Push latest GCR
-         id: push-to-ghcr
+         id: push-latest-to-ghcr
          uses: redhat-actions/push-to-registry@v1
          with:
           image: "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}"
