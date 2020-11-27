@@ -58,28 +58,12 @@ jobs:
           dockerfiles: |
             src/main/docker/Dockerfile.jvm
 
-       - name: Tag Latest
-         run: |
-           docker tag "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{steps.commit_metadata.outputs.branch}}-${{steps.commit_metadata.outputs.sha}}" "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}"
-
        - name: Push To GCR
          id: push-tag-to-ghcr
          uses: redhat-actions/push-to-registry@v1
          with:
           image: "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}"
           tag: "${{steps.commit_metadata.outputs.branch}}-${{steps.commit_metadata.outputs.sha}}"
-          registry: ${{ secrets.QUAY_REPO }}
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_PAT }}
-
-       # until https://github.com/redhat-actions/push-to-registry/issues/6
-       # is fixed
-       - name: Push latest GCR
-         id: push-latest-to-ghcr
-         uses: redhat-actions/push-to-registry@v1
-         with:
-          image: "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}"
-          tag: "latest"
           registry: ${{ secrets.QUAY_REPO }}
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GHCR_PAT }}
