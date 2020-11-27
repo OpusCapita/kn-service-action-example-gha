@@ -1,0 +1,103 @@
+name: App Build and Push(GHCR)
+env:
+  CONTAINER_REPO: "ghcr.io"
+  CONTAINER_IMAGE_REPO: "kameshsampath/fruits-app"
+  REGISTRY_USERNAME: "${{ github.repository_owner }}"
+  REGISTRY_PASSWORD: "${{ github.secrets.GHCR_PAT }}"
+  BASE_IMAGE: "registry.access.redhat.com/ubi8/openjdk-11"
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  checkoutAndBuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Checkout
+        id: git_checkout
+        uses: actions/checkout@v2
+      - name: Maven Build
+        id: build_app
+        run: mvn -B -DskipTests clean package --file pom.xml
+      - name: Cache Maven packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - uses: actions/upload-artifact@v2
+        name: Save build target directory
+        with:
+          name: buildArtifacts
+          path: |
+            target
+  containerBuild:
+    runs-on: ubuntu-latest
+    needs: [checkoutAndBuild]
+    steps:
+       - name: Download build target directory
+         uses: actions/download-artifact@v2
+         with:
+          name: buildArtifacts
+       - name: Commit Metadata
+         id: commit_metadata
+         run: |
+            echo "##[set-output name=sha;]$(echo $(git rev-parse --short $GITHUB_SHA))"
+            echo "##[set-output name=branch;]$(echo ${GITHUB_REF##*/})"
+       
+       - name: Build Image
+         uses: redhat-actions/buildah-build@v1
+         with:
+          image: "${{ env.CONTAINER_REPO }}/CONTAINER_IMAGE_REPO"
+          tag: "${{steps.commit_metadata.outputs.branch}}-${{steps.commit_metadata.outputs.sha}}"
+          base-image: ${{ env.BASE_IMAGE }}
+          content: |
+            target/lib/* /deployments/lib/
+            target/*-runner.jar /deployments/app.jar
+          envs: |
+            JAVA_OPTIONS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+
+       - name: Tag Latest
+         run: |
+           docker tag "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{steps.commit_metadata.outputs.branch}}-${{steps.commit_metadata.outputs.sha}}" "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}"
+
+       - name: Push To GCR
+         id: push-to-ghcr
+         uses: redhat-actions/push-to-registry@v1
+         with:
+          image: "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}"
+          tag: "${{steps.commit_metadata.outputs.branch}}-${{steps.commit_metadata.outputs.sha}}"
+          registry: ${{ secrets.QUAY_REPO }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_PAT }}
+
+       # until https://github.com/redhat-actions/push-to-registry/issues/6
+       # is fixed
+       - name: Push latest GCR
+         id: push-to-ghcr
+         uses: redhat-actions/push-to-registry@v1
+         with:
+          image: "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}"
+          tag: "latest"
+          registry: ${{ secrets.QUAY_REPO }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_PAT }}
+
+       - name: Knative Service Deploy
+         id: kn_service_deploy
+         uses: kameshsampath/kn-service-action@v0.2.0
+         with: 
+           k8s_api_server_url: "${{ secrets.OPENSHIFT_SERVER_URL }}"
+           openshift_token: "${{ secrets.OPENSHIFT_TOKEN }}"
+           service_name: fruits-app
+           service_namespace: demos
+           registry_user: ${{ github.repository_owner }}
+           registry_password: ${{ secrets.GHCR_PAT }}
+           container_image: "${{ steps.push-to-ghcr.outputs.registry-path }}"
+       
+       - name: Show Kn Service URL
+         run: echo ${{ steps.kn_service_deploy.outputs.service_url }}
