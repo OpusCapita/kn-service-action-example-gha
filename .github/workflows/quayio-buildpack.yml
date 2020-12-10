@@ -64,10 +64,8 @@ jobs:
        # 
        - name: Knative Service Deploy
          id: kn_service_deploy
-         uses: kameshsampath/kn-service-action@v0.2.1
+         uses: kameshsampath/kn-service-action@v0.2.2
          with: 
-           k8s_api_server_url: "${{ secrets.OPENSHIFT_SERVER_URL }}"
-           openshift_token: "${{ secrets.OPENSHIFT_TOKEN }}"
            service_name: fruits-app
            service_namespace: demos
            container_image: "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}:${{ steps.buildpack_build_push.outputs.digest }}"

@@ -64,16 +64,22 @@ jobs:
          with:
           image: "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}"
           tag: "${{steps.commit_metadata.outputs.branch}}-${{steps.commit_metadata.outputs.sha}}"
-          registry: ${{ secrets.QUAY_REPO }}
+          registry: ${{ env.CONTAINER_REPO }}
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GHCR_PAT }}
 
+       - name: Login into OpenShift Cluster
+         id: oc_login
+         uses: redhat-actions/oc-login@v1
+         with:
+            openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
+            openshift_username: ${{ secrets.OPENSHIFT_USERNAME }}
+            openshift_password: ${{ secrets.OPENSHIFT_PASSWORD }}
+
        - name: Knative Service Deploy
          id: kn_service_deploy
-         uses: kameshsampath/kn-service-action@v0.2.1
+         uses: kameshsampath/kn-service-action@v0.2.2
          with: 
-           k8s_api_server_url: "${{ secrets.OPENSHIFT_SERVER_URL }}"
-           openshift_token: "${{ secrets.OPENSHIFT_TOKEN }}"
            service_name: fruits-app
            service_namespace: demos
            registry_user: ${{ github.repository_owner }}
