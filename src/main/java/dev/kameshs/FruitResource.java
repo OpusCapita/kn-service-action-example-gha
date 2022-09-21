@@ -14,4 +14,11 @@ public class FruitResource {
     public String fruit() {
         return "apple";
     }
+    
+    @GET
+    @Path("/fetch")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String fetch() {
+        return "Hello OC";
+    }
 }
