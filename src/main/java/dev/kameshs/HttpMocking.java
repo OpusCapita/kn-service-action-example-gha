@@ -14,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * Azure Functions with HTTP Trigger.
  */
+@Path("/oc")
 public class HttpMocking {
 
     static Logger logger = Logger.getLogger(HttpMocking.class.getName());
