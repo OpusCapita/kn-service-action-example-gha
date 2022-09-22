@@ -2,7 +2,6 @@ package dev.kameshs;
 
 import java.util.*;
 import org.jboss.logging.Logger;
-import io.quarkus.arc.log.LoggerName;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -19,12 +18,8 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/oc")
 public class HttpMocking {
-
-    @Inject
-    Logger log;
-  
-    @LoggerName("foo")
-    Logger fooLog;
+    
+    private static final Logger logger = Logger.getLogger(HttpMocking.class);
 
     private int overrideIntValue( int oldValue, String  queryValue ) {
         String query = queryValue;
