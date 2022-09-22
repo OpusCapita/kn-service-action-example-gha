@@ -1,6 +1,7 @@
 package dev.kameshs;
 
 import java.util.*;
+import org.jboss.logging.Logger;
 import io.quarkus.arc.log.LoggerName;
 import javax.ws.rs.GET;
 import javax.ws.rs.QueryParam;
