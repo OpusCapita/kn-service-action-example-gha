@@ -1,0 +1,86 @@
+name: App Build
+#env:
+#  CONTAINER_IMAGE_REPO: "opuscapita/kn-service-action-example"
+#  REGISTRY_USERNAME: "${{ github.repository_owner }}"
+#  REGISTRY_PASSWORD: "${{ github.secrets.docker_hub_pass }}"
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  checkoutAndBuild:
+    runs-on: self-hosted
+    container: 
+      image: maven:3.8.6-openjdk-11
+    steps:
+      - name: Checkout
+        id: git_checkout
+        uses: actions/checkout@v2
+      - name: Maven Build
+        id: build_app
+        run: mvn -B -DskipTests clean package --file pom.xml
+#      - name: Cache Maven packages
+#        uses: actions/cache@v2
+#        with:
+#          path: ~/.m2
+#          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+#          restore-keys: ${{ runner.os }}-m2
+#      - uses: actions/upload-artifact@v2
+#        name: Save build target directory
+#        with:
+#          name: buildArtifacts
+#          path: |
+#            ./**/*
+#  containerBuild:
+#    runs-on: ubuntu-latest
+#    needs: [checkoutAndBuild]
+#    steps:
+#       - name: Download build target directory
+#         uses: actions/download-artifact@v2
+#         with:
+#          name: buildArtifacts
+#       - name: Commit Metadata
+#         id: commit_metadata
+#         run: |
+#            echo "##[set-output name=sha;]$(echo $(git rev-parse --short $GITHUB_SHA))"
+#            echo "##[set-output name=branch;]$(echo ${GITHUB_REF##*/})"
+#       
+#       - name: Build Image
+#         uses: redhat-actions/buildah-build@v1
+#         with:
+#          image: "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO }}"
+#          tag: "${{steps.commit_metadata.outputs.branch}}-${{steps.commit_metadata.outputs.sha}}"
+#          base-image: ${{ env.BASE_IMAGE }}
+#          dockerfiles: |
+#            src/main/docker/Dockerfile.jvm
+#
+#       - name: Push To GCR
+#         id: push-tag-to-ghcr
+#         uses: redhat-actions/push-to-registry@v1
+#         with:
+#          image: "${{ env.CONTAINER_REPO }}/${{ env.CONTAINER_IMAGE_REPO}}"
+#          tag: "${{steps.commit_metadata.outputs.branch}}-${{steps.commit_metadata.outputs.sha}}"
+#          registry: ${{ env.CONTAINER_REPO }}
+#          username: ${{ github.repository_owner }}
+#          password: ${{ secrets.GHCR_PAT }}
+#
+#       - name: Login into OpenShift Cluster
+#         id: oc_login
+#         uses: redhat-actions/oc-login@v1
+#         with:
+#            openshift_server_url: ${{ secrets.OPENSHIFT_SERVER }}
+#            openshift_username: ${{ secrets.OPENSHIFT_USERNAME }}
+#            openshift_password: ${{ secrets.OPENSHIFT_PASSWORD }}
+#
+#       - name: Knative Service Deploy
+#         id: kn_service_deploy
+#         uses: kameshsampath/kn-service-action@v0.2.2
+#         with: 
+#           service_name: fruits-app
+#           service_namespace: demos
+#           registry_user: ${{ github.repository_owner }}
+#           registry_password: ${{ secrets.GHCR_PAT }}
+#           container_image: "${{ steps.push-tag-to-ghcr.outputs.registry-path }}"
+#       
+#       - name: Show Kn Service URL
+#         run: echo ${{ steps.kn_service_deploy.outputs.service_url }}
